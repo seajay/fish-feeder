@@ -4,36 +4,35 @@ Flask app to control a fish feeder
 
 '''
 
-import gpiozero
-from time import sleep
 from datetime import datetime
 from flask import Flask, render_template, request
+import sqlite3
 
 app = Flask(__name__)
 templateData = {
+	'status' : "Initialising",
 	'last_feed' : "Never"
 }
 
 @app.route("/")
 def main():
-
+	# todo get status from db
 	return render_template('main.html', **templateData)
 
 # Only one action possible at the moment, "feed"
 @app.route("/<action>")
 def action(action):
 	if action == "feed":
-		motor = gpiozero.LED(21)
-		switch = gpiozero.Button(16, pull_up=True)
 
-		motor.on()
-		sleep(5)
+		conn = sqlite3.connect('/home/pi/turt-mon/turtles.db')
+		c = conn.cursor()
+		c.execute("UPDATE control SET feedNow=?", [True])
+		conn.commit()
 
-		while (switch.is_pressed):
-        		pass
-
-		motor.off()
+		# todo read this from db
 		templateData['last_feed'] = str(datetime.now())
+
+	# should this be return redirect?
 	return render_template('main.html', **templateData)
 
 if __name__ == "__main__":
