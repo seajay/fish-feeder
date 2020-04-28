@@ -16,7 +16,10 @@ templateData = {
 
 @app.route("/")
 def main():
-	# todo get status from db
+	conn = sqlite3.connect('/home/pi/turt-mon/turtles.db')
+	c = conn.cursor()
+	c.execute('''select max(time) from feeds''')
+	templateData['last_feed'] = c.fetchone()[0]
 	return render_template('main.html', **templateData)
 
 # Only one action possible at the moment, "feed"
@@ -29,8 +32,8 @@ def action(action):
 		c.execute("UPDATE control SET feedNow=?", [True])
 		conn.commit()
 
-		# todo read this from db
-		templateData['last_feed'] = str(datetime.now())
+		c.execute('''select max(time) from feeds''')
+		templateData['last_feed'] = c.fetchone()[0]
 
 	# should this be return redirect?
 	return render_template('main.html', **templateData)
